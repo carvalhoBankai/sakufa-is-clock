@@ -2,9 +2,11 @@
 #![no_main]
 
 use esp_backtrace as _;
-use esp_hal::{clock::ClockControl, peripherals::Peripherals, prelude::*, Delay};
+use esp_hal::{clock::ClockControl, gpio::IO, i2c::I2C, peripherals::Peripherals, prelude::*,Delay};
 use esp_println::println;
 mod ht16k33;
+use crate::ht16k33::*;
+
 
 #[entry]
 fn main() -> ! {
@@ -13,6 +15,21 @@ fn main() -> ! {
 
     let clocks = ClockControl::max(system.clock_control).freeze();
     let mut delay = Delay::new(&clocks);
+    let io = IO::new(peripherals.GPIO, peripherals.IO_MUX);
+
+    let i2c = I2C::new(
+        peripherals.I2C0,
+        io.pins.gpio21,
+        io.pins.gpio22,
+        100u32.kHz(),
+        &clocks,
+    );
+
+    
+    let mut display = HT16K33::new(i2c, 0x70);
+
+    display.init(&mut delay);
+
 
     // setup logger
     // To change the log_level change the env section in .cargo/config.toml

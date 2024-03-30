@@ -4,6 +4,7 @@
 use esp_backtrace as _;
 use esp_hal::{clock::ClockControl, peripherals::Peripherals, prelude::*, Delay};
 use esp_println::println;
+mod ht16k33;
 
 #[entry]
 fn main() -> ! {

@@ -58,8 +58,24 @@ impl HT16K33 {
     }
 
     /// set the brightness of the display
-    pub fn set_brightness(&mut self, brigthness: u32) {
-       todo!()
+    pub fn set_brightness(&mut self, brightness: u32) {
+        // have the brigthness such as 100 ---> 0xff and 0 ---> 0
+        let mut in_range_brightness = brightness;
+
+        // put the brigthness in the range 0 ---> 100
+        if in_range_brightness > 100 {
+            in_range_brightness = 100;
+        }
+
+        // have the brigthness such as 100 ---> 0xff and 0 ---> 0
+        in_range_brightness = (in_range_brightness) * 15 / 100;
+        in_range_brightness = in_range_brightness % 16;
+        println!("brigthness is {in_range_brightness}");
+
+        // writing the value to the ht16K33 register
+        self.i2c
+            .write(self.addr, &[Self::DIMMING_SET | in_range_brightness as u8])
+            .ok();
     }
 
     /// set the blink rate of the display

@@ -1,14 +1,14 @@
 use esp_hal::prelude::*;
 use esp_hal::{i2c::I2C, peripherals::I2C0, Delay};
-
+use esp_println::println;
 pub struct HT16K33 {
     i2c: I2C<'static, I2C0>,
     addr: u8,
 }
 
 pub enum DisplayState {
-    ON,
     OFF,
+    ON,
 }
 
 pub enum DisplayBlinkRate {
@@ -23,6 +23,7 @@ impl HT16K33 {
     const SYTEM_SETUP: u8 = 0x20;
     const DISPLAY_SETUP: u8 = 0x80;
     const ROW_INT: u8 = 0xa0;
+    const DIMMING_SET: u8 = 0xe0;
 
     /// returns a new ht16k33 device
     pub fn new(i2c: I2C<'static, I2C0>, addr: u8) -> Self {
@@ -41,7 +42,7 @@ impl HT16K33 {
         self.i2c.write(self.addr, &[row_int_setup]).ok();
 
         // DisplayOn and blink at 2Hz
-        let display_setup = Self::DISPLAY_SETUP | 0x01 | 0x02;
+        let display_setup = Self::DISPLAY_SETUP | 0x01;
         self.i2c.write(self.addr, &[display_setup]).ok();
 
         // Waiting for the setup to be completed
@@ -49,13 +50,16 @@ impl HT16K33 {
     }
 
     /// set the state of the display
-    pub fn set_display_state(state: DisplayState) {
-        todo!()
+    /// This set the blink state to off
+    pub fn set_display_state(&mut self, state: DisplayState) {
+        self.i2c
+            .write(self.addr, &[Self::DISPLAY_SETUP | state as u8])
+            .ok();
     }
 
     /// set the brightness of the display
-    pub fn set_brightness(&mut self, brigthness: u8) {
-        todo!()
+    pub fn set_brightness(&mut self, brigthness: u32) {
+       todo!()
     }
 
     /// set the blink rate of the display

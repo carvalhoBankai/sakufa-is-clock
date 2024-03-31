@@ -30,6 +30,13 @@ fn main() -> ! {
 
     display.init(&mut delay);
 
+    display.set_blink_rate(DisplayBlinkRate::Blink2Hz);
+
+    display.display_buffer[0] = 0xff;
+    display.display_buffer[2] = 0xf0;
+
+    display.write_to_display();
+    delay.delay_ms(500u32);
 
     // setup logger
     // To change the log_level change the env section in .cargo/config.toml

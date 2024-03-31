@@ -4,8 +4,11 @@ use esp_println::println;
 pub struct HT16K33 {
     i2c: I2C<'static, I2C0>,
     addr: u8,
+    display_state: DisplayState,
+    pub display_buffer : [u8;15]
 }
 
+#[derive(Copy, Clone)]
 pub enum DisplayState {
     OFF,
     ON,
@@ -27,7 +30,12 @@ impl HT16K33 {
 
     /// returns a new ht16k33 device
     pub fn new(i2c: I2C<'static, I2C0>, addr: u8) -> Self {
-        HT16K33 { i2c, addr }
+        HT16K33 {
+            i2c,
+            addr,
+            display_state: DisplayState::OFF,
+            display_buffer:[0;15],
+        }
     }
 
     /// Initialise the ht16k33 module
@@ -41,12 +49,15 @@ impl HT16K33 {
         let row_int_setup = Self::ROW_INT;
         self.i2c.write(self.addr, &[row_int_setup]).ok();
 
-        // DisplayOn and blink at 2Hz
+        // DisplayOn and blink off
         let display_setup = Self::DISPLAY_SETUP | 0x01;
         self.i2c.write(self.addr, &[display_setup]).ok();
+        self.display_state = DisplayState::ON;
 
         // Waiting for the setup to be completed
         delay.delay_ms(2u8);
+
+        self.clear();
     }
 
     /// set the state of the display
@@ -55,6 +66,7 @@ impl HT16K33 {
         self.i2c
             .write(self.addr, &[Self::DISPLAY_SETUP | state as u8])
             .ok();
+        self.display_state = state;
     }
 
     /// set the brightness of the display
@@ -79,17 +91,33 @@ impl HT16K33 {
     }
 
     /// set the blink rate of the display
-    pub fn set_blink_rate(rate: DisplayBlinkRate) {
-        todo!()
+    pub fn set_blink_rate(&mut self, rate: DisplayBlinkRate) {
+        self.i2c
+            .write(
+                self.addr,
+                &[Self::DISPLAY_SETUP | ((rate as u8) << 1) | self.display_state as u8],
+            )
+            .ok();
     }
 
     /// Issue buffered data in RAM to display
-    pub fn write_to_display(buffer_to_write: &[u16]) {
-        todo!()
+    pub fn write_to_display(&mut self) {
+        let mut data_and_cmd = [0u8;16];
+        // the first value we must send is the display data pointer address
+        data_and_cmd[0] = Self::DISPLAY_DATA_POINTER;
+
+        // copy the ram data to the array we are sending
+        for j in 1..=15{
+            data_and_cmd[j] = self.display_buffer[j-1];
+        }
+        // write the data to the display ram
+        self.i2c.write(self.addr, &data_and_cmd).ok();
     }
 
     /// clear the display
-    pub fn clear() {
-        todo!()
+    /// it assumes that clearing the display means setting all rows bits to 0
+    pub fn clear(&mut self) {
+       self.display_buffer = [0;15];
+       self.write_to_display();
     }
 }

@@ -2,11 +2,14 @@
 #![no_main]
 
 use esp_backtrace as _;
-use esp_hal::{clock::ClockControl, gpio::IO, i2c::I2C, peripherals::Peripherals, prelude::*,Delay};
+use esp_hal::{
+    clock::ClockControl, gpio::IO, i2c::I2C, peripherals::Peripherals, prelude::*, Delay,
+};
 use esp_println::println;
 mod ht16k33;
+mod seven_seg_display;
 use crate::ht16k33::*;
-
+use crate::seven_seg_display::*;
 
 #[entry]
 fn main() -> ! {
@@ -25,19 +28,23 @@ fn main() -> ! {
         &clocks,
     );
 
+    //let mut display = HT16K33::new(i2c, 0x70);
+
+    //display.init(&mut delay);
+
+    //display.set_blink_rate(DisplayBlinkRate::Blink2Hz);
+
+    // display.display_buffer[0] = 0xff;
+    // display.display_buffer[2] = 0xf0;
+
+    // display.write_to_display();
+    // delay.delay_ms(500u32);
+
+    let mut seven_seg_display = SEVENSEGDISPLAY::new(4, i2c, 0x70, &mut delay);
+
     
-    let mut display = HT16K33::new(i2c, 0x70);
 
-    display.init(&mut delay);
-
-    display.set_blink_rate(DisplayBlinkRate::Blink2Hz);
-
-    display.display_buffer[0] = 0xff;
-    display.display_buffer[2] = 0xf0;
-
-    display.write_to_display();
-    delay.delay_ms(500u32);
-
+    
     // setup logger
     // To change the log_level change the env section in .cargo/config.toml
     // or remove it and set ESP_LOGLEVEL manually before running cargo run
@@ -47,6 +54,11 @@ fn main() -> ! {
     println!("Hello world!");
     loop {
         println!("Loop...");
-        delay.delay_ms(500u32);
+        for i in 0..4{
+            for j in 0..10{
+                seven_seg_display.print_number(j,i);
+                delay.delay_ms(200u32);
+            }
+        }
     }
 }

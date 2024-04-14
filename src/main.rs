@@ -1,6 +1,8 @@
 #![no_std]
 #![no_main]
 
+use core::fmt::Display;
+
 use esp_backtrace as _;
 use esp_hal::{
     clock::ClockControl, gpio::IO, i2c::I2C, peripherals::Peripherals, prelude::*, Delay,
@@ -52,13 +54,14 @@ fn main() -> ! {
     esp_println::logger::init_logger_from_env();
     log::info!("Logger is setup");
     println!("Hello world!");
+    seven_seg_display.display_number(423);
     loop {
-        println!("Loop...");
-        for i in 0..4{
+       // println!("Loop...");
+        /* for i in 0..4{
             for j in 0..10{
                 seven_seg_display.print_number(j,i);
                 delay.delay_ms(200u32);
             }
-        }
+        } */
     }
 }

@@ -53,8 +53,9 @@ fn main() -> ! {
     // this requires a clean rebuild because of https://github.com/rust-lang/cargo/issues/10358
     esp_println::logger::init_logger_from_env();
     log::info!("Logger is setup");
-    println!("Hello world!");
-    seven_seg_display.display_number(423);
+    //seven_seg_display.display_number(423);
+    seven_seg_display.display_string("3D3D");
+    
     loop {
        // println!("Loop...");
         /* for i in 0..4{

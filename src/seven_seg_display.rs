@@ -13,6 +13,11 @@ impl SEVENSEGDISPLAY {
     const DISPLAYNUMBERS: [u8; 11] = [
         0xbf, 0x86, 0xdb, 0xcf, 0xe6, 0xed, 0xfd, 0x87, 0xff, 0xe7, 0xdf,
     ];
+
+    const DISPLAY_LETTERS: [u8; 24] = [
+        0x77, 0x7c, 0x39, 0x5e, 0x79, 0x71, 0x7c, 0x74, 0x30, 0x1e, 0x76, 0x38, 0x37, 0x37, 0x3f,
+        0x73, 0x3f, 0x77, 0x6d, 0x07, 0x3e, 0x3e, 0x76, 0x5b,
+    ];
     pub fn new(number_of_digits: u8, i2c: I2C<'static, I2C0>, addr: u8, delay: &mut Delay) -> Self {
         let mut ht16k33 = HT16K33::new(i2c, addr);
         ht16k33.init(delay);
@@ -50,6 +55,39 @@ impl SEVENSEGDISPLAY {
         for pos in 0..self.number_of_digits {
             self.print_number((num % 10) as u8, (self.number_of_digits - pos - 1) as usize);
             num = num / 10;
+        }
+    }
+
+    ///display a single caracter on a position pos
+    /// if it is not possible to display it, nothing will hapen
+    pub fn display_char(&mut self, car: char, position: usize) {
+        let car = car.to_ascii_uppercase() as u8;
+        if car < 65 || car > 90 {
+            return;
+        }
+
+        let number = car - 65;
+        self.ht16k33.display_buffer
+            [self.display_map[position % (self.number_of_digits as usize)]] =
+            Self::DISPLAY_LETTERS[(number % Self::DISPLAY_LETTERS.len() as u8) as usize];
+        self.ht16k33.write_to_display();
+    }
+
+    /// display a string that fits on the display
+    /// if it does not fit on it, it will only display the first number of digits
+    /// when the
+    pub fn display_string(&mut self, text_str: &str) {
+        let mut pos = 0;
+        for txt in text_str.chars() {
+            if txt.is_digit(10) {
+                self.print_number(txt as u8 - 48, pos);
+            } else {
+                self.display_char(txt, pos);
+            }
+            pos += 1;
+            if pos == self.number_of_digits as usize {
+                break;
+            }
         }
     }
 }
